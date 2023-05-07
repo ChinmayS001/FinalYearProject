@@ -27,6 +27,14 @@ class Blockchain:
     def last_block(self):
         return self.chain[-1]
 
+    # def add_blocks_from_cloud(self,cloudBlockchain):
+    #     if obj[len(obj)-1].index != blockchain.chain[len(blockchain.chain)-1].index:
+    #         blockchain.chain.append(obj[blockchain.chain[len(blockchain.chain)-1].index:obj[len(obj)-1].index])
+    #         print(obj," ",blockchain.chain[len(blockchain.chain)-1].index," ",obj[len(obj)-1].index])
+    #         print(blockchain)
+    #         blockchain.save_object(blockchain,'blockchain_contract.txt')
+    
+
     def add_block(self, block, proof): #adding data to block by computing new and previous hashes
         previous_hash = self.last_block.hash
 

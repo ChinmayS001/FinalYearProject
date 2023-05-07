@@ -11,8 +11,6 @@ import os
 from tkinter import ttk
 import time
 import requests
-import json
-import json
 from keras.models import load_model
 from Agent import *
 import math
@@ -21,7 +19,7 @@ import random
 from collections import deque
 import sys
 import matplotlib.pyplot as plt
-
+from Block import *
 
 main = Tk()
 main.title("Effective Management for Blockchain-Based Agri-Food Supply Chains Using Deep Reinforcement Learning")
@@ -34,29 +32,88 @@ sold_arr = []
 rewards = []
 qrewards = []
 extension_rewards = []
-
+urlg = "http://localhost:5000/blocks"
+urlp = "http://localhost:5000/blockchain"
 blockchain = Blockchain()
 if os.path.exists('blockchain_contract.txt'):
-    url = "http://localhost:5000/blocks"
-    obj = requests.get(url)
-    #obj = json.loads(obj)
-    print(obj)
     with open('blockchain_contract.txt', 'rb') as fileinput:
         blockchain = pickle.load(fileinput)
+        
     fileinput.close()
     for i in blockchain.chain:
-        print(i.hash)
+        print(i.index)
 
-    # if obj[len(obj)-1].index != blockchain.chain[len(blockchain.chain)-1].index:
-    #     #blockchain.chain.append(obj[blockchain.chain[len(blockchain.chain)-1].index:obj[len(obj)-1].index])
-    #     print(obj," ",blockchain.chain[len(blockchain.chain)-1].index," ",obj[len(obj)-1].index])
-    #     print(blockchain)
-    #     #blockchain.save_object(blockchain,'blockchain_contract.txt')
+
+res = requests.get(urlg)
+# print(res.headers['content-type'])
+# print(res.json())
+obj = res.json()
+#print(obj)
+if obj != []:
+    if len(blockchain.chain) == 1:
+        print("Less than One")
+        rem = obj[1:]
+        #print("got",rem)
+        for i in range(len(rem)):
+            b = Block(rem[i]["index"],[rem[i]["transactions"]],rem[i]["timestamp"],rem[i]["previous_hash"],rem[i]["nonce"])
+            blockchain.chain.append(b)
+    
+        #print(obj," ",blockchain.chain[len(blockchain.chain)-1].index," ",obj[len(obj)-1]['index'])
+        print("Initial Load",blockchain)
+        blockchain.save_object(blockchain,'blockchain_contract.txt')
+
+
+    elif obj[len(obj)-1]['index'] != blockchain.chain[len(blockchain.chain)-1].index:
+        rem = obj[blockchain.chain[len(blockchain.chain)-1].index+1:]
+        print("got",rem)
+        for i in range(len(rem)):
+            b = Block(rem[i]["index"],[rem[i]["transactions"]],rem[i]["timestamp"],rem[i]["previous_hash"],rem[i]["hash"],rem[i]["nonce"])
+            blockchain.chain.append(b)
+        
+        #print(obj," ",blockchain.chain[len(blockchain.chain)-1].index," ",obj[len(obj)-1]['index'])
+        print("Initial Load",blockchain.chain[0])
+        blockchain.save_object(blockchain,'blockchain_contract.txt')
+        print("Initial Load after save",blockchain.chain[0])
 
 
 def saveASCDetails():
     global filename
     global compute_time
+    
+    '''commit2'''
+    res = requests.get(urlg)
+    # print(res.headers['content-type'])
+    # print(res.json())
+    print("The Blockchain before save asc details",blockchain)
+    obj = res.json()
+    #print(obj)
+    if obj != []:
+        if len(blockchain.chain) == 1:
+            print("Less than One")
+            rem = obj[1:]
+            #print("got",rem)
+            for i in range(len(rem)):
+                b = Block(rem[i]["index"],[rem[i]["transactions"]],rem[i]["timestamp"],rem[i]["previous_hash"],rem[i]["nonce"])
+                blockchain.chain.append(b)
+        
+            #print("98",obj," ",blockchain.chain[len(blockchain.chain)-1].index," ",obj[len(obj)-1]['index'])
+            print("The Blockchain after save asc details",type(blockchain),blockchain)
+            blockchain.save_object(blockchain,'blockchain_contract.txt')
+
+
+        elif obj[len(obj)-1]['index'] != blockchain.chain[len(blockchain.chain)-1].index:
+            rem = obj[blockchain.chain[len(blockchain.chain)-1].index+1:]
+            #print("remaining Blockchain",rem)
+            for i in range(len(rem)):
+                b = Block(rem[i]["index"],[rem[i]["transactions"]],rem[i]["timestamp"],rem[i]["previous_hash"],rem[i]["hash"],rem[i]["nonce"])
+                blockchain.chain.append(b)
+            
+            print(obj," ",blockchain.chain[len(blockchain.chain)-1].index," ",obj[len(obj)-1]['index'])
+            print("The Blockchain after save asc details",type(blockchain),blockchain)
+            blockchain.save_object(blockchain,'blockchain_contract.txt')
+
+        '''commit2'''
+
     text.delete('1.0', END)
     pid = tf1.get()
     pname = tf2.get()
@@ -76,18 +133,26 @@ def saveASCDetails():
         tf3.delete(0, END)
         end = time.time()
         compute_time.append((end - start))
-        url = "http://localhost:5000/blockchain"
-
-        print(blockchain.get_dict())
-        p = blockchain.get_dict()
-        chainD = []
         
+
+        print("original Object",blockchain,"Chain",blockchain.chain[0])
+        print()
+        ch = blockchain.chain
+        q = blockchain.get_dict()
+        p = q
+        chainD = []
+        print("Completely before and after",p)
         for i in p["chain"]:
             chainD.append(i.get_dict())
         p["chain"] = chainD
-        print(p)
-        response = requests.post(url, json=p)
-        print(response.content)
+        
+        print("Converted to dictionary",p,"It's Chain",p["chain"][0])
+        print()
+        print(blockchain,"Chain",blockchain.chain[0])
+        print()
+        response = requests.post(urlp, json=p)
+        blockchain.chain = ch
+        #print(response.content)
     else:
         text.insert(END,"Please fill all details")
         
@@ -101,12 +166,45 @@ def getProduct():
             arr = data.split("#")
             text.insert(END,"Available Product ID : "+arr[0]+"\n")
             text.insert(END,"Product Storage Hash ID : "+str(b.hash)+"\n\n")
-
+    print(blockchain)
 
 def getASCDetails():
     text.delete('1.0', END)
     pid = tf1.get()
     flag = False
+    '''commit2'''
+    res = requests.get(urlg)
+    print("The Blockchain before get asc details",type(blockchain.chain[0]),blockchain)
+    # print(res.headers['content-type'])
+    # print(res.json())
+    obj = res.json()
+    #print(obj)
+    if obj != []:
+        if len(blockchain.chain) == 1:
+            print("Less than One")
+            rem = obj[1:]
+            #print("got",rem)
+            for i in range(len(rem)):
+                b = Block(rem[i]["index"],[rem[i]["transactions"]],rem[i]["timestamp"],rem[i]["previous_hash"],rem[i]["nonce"])
+                blockchain.chain.append(b)
+        
+            #print(obj," ",blockchain.chain[len(blockchain.chain)-1].index," ",obj[len(obj)-1]['index'])
+            print("The Blockchain after get asc details",type(blockchain.chain[0]),blockchain)
+            blockchain.save_object(blockchain,'blockchain_contract.txt')
+
+
+        elif obj[len(obj)-1]['index'] != blockchain.chain[len(blockchain.chain)-1].index:
+            rem = obj[blockchain.chain[len(blockchain.chain)-1].index+1:]
+            print("got",rem)
+            for i in range(len(rem)):
+                b = Block(rem[i]["index"],[rem[i]["transactions"]],rem[i]["timestamp"],rem[i]["previous_hash"],rem[i]["hash"],rem[i]["nonce"])
+                blockchain.chain.append(b)
+            
+            print(obj," ",blockchain.chain[len(blockchain.chain)-1].index," ",obj[len(obj)-1]['index'])
+            print("The Blockchain after get asc details",type(blockchain.chain[0]),blockchain)
+            blockchain.save_object(blockchain,'blockchain_contract.txt')
+
+        '''commit2'''
     for i in range(len(blockchain.chain)):
         if i > 0:
             b = blockchain.chain[i]
