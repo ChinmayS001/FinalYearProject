@@ -32,8 +32,8 @@ sold_arr = []
 rewards = []
 qrewards = []
 extension_rewards = []
-urlg = "http://localhost:5000/blocks"
-urlp = "http://localhost:5000/blockchain"
+urlg = "https://blockchain-v7dz.onrender.com/blocks"
+urlp = "https://blockchain-v7dz.onrender.com/blockchain"
 blockchain = Blockchain()
 if os.path.exists('blockchain_contract.txt'):
     with open('blockchain_contract.txt', 'rb') as fileinput:
